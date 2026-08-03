@@ -12,6 +12,32 @@ Everything runs on local open-source models — **your B2 credentials are the on
 - Full-stack dashboard UI (Next.js 16 + React 19 + Tailwind v4 + shadcn/ui) and a layered FastAPI backend with structural tests
 - CPU-by-default compute with automatic CUDA → Apple MPS → CPU device selection — no GPU required
 
+## What it looks like
+
+**Dashboard** — library metrics (videos, scenes, indexed scenes, and B2 storage), a 7-day activity chart, and a recent-videos table.
+
+![Dashboard with video-scene metrics, activity chart, and recent videos](docs/images/dashboard.png)
+
+**Scene Search (text)** — a natural-language query is encoded by CLIP and ranked against every indexed keyframe; each hit carries a thumbnail, timecode, match score, and a link to the scene clip on B2.
+
+![Text-to-scene search results for "a rabbit in a green meadow"](docs/images/search-text.png)
+
+**Scene Search (image)** — upload a still and CLIP returns the visually closest scenes from across the whole library.
+
+![Image-to-scene search results ranked by visual similarity](docs/images/search-image.png)
+
+**Video detail** — every detected scene of a video as a keyframe grid with per-scene timecodes, index status, and per-clip links.
+
+![Video detail page showing a nine-scene keyframe grid](docs/images/video-detail.png)
+
+**Library** — the sample-scoped corpus of ingested videos with scene counts, duration, and index status.
+
+![Video library listing two indexed videos](docs/images/library.png)
+
+**Ingest** — pick a video, name it, choose a PySceneDetect threshold, and segment it into scenes on B2.
+
+![Ingest form with file picker, title, and detection-threshold selector](docs/images/ingest.png)
+
 ## Why Backblaze B2
 
 This sample demonstrates **sustained multimodal write**: one video fans out into many objects — a source, a clip and keyframe per scene, a per-keyframe embedding, and a global index — so a one-hour video can become hundreds of B2 objects. B2 is the single storage layer for the whole pipeline, accessed only through the S3-compatible API with a custom user agent (`b2ai-clip-video-scene-search`) and the standard `B2_*` environment variables. There is no application database: the meta.json per video, the `.npy` embeddings, and the FAISS index all live in the bucket.
