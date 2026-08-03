@@ -1,6 +1,8 @@
 <!-- last_verified: 2026-07-29 -->
 # AGENTS.md
 
+**CLIP Video Scene Search** — a Backblaze B2 sample that segments videos with PySceneDetect, embeds scene keyframes with OpenCLIP, and serves text/image scene search over a FAISS index, all persisted to B2 via the S3-compatible API.
+
 This is the authoritative control surface for all coding agents. Read this first.
 
 ## Instruction Authority

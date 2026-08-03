@@ -6,20 +6,23 @@ product
 
 ## Users
 
-AI coding agents and "vibe coders" (developers who lean on AI to move fast) who clone
-this kit as the foundation for a new full-stack app. Their context: they want to skip
-the boilerplate loop (dashboard, upload, file browser, cloud storage wiring) and go
-straight to building their app's unique features. They read the repo, keep the shared
-scaffolding, and rebrand + rewrite the dashboard for their own use case.
+Video-platform engineers and ML dataset curators who already store video on Backblaze
+B2 and want a multimodal search layer over it. Their context: raw video is opaque —
+finding "the beach shot" means scrubbing timelines by hand. They want a pipeline that
+turns a video library into scene-indexed, searchable content without standing up a
+vector database or paying a per-call vision API.
 
 ## Product Purpose
 
-A production-ready full-stack starter kit (Next.js 16 + React 19 + Tailwind v4 +
-shadcn/ui frontend, FastAPI backend) with Backblaze B2 cloud storage integrated out of
-the box. It ships a dashboard, drag-and-drop upload, and a file browser so builders
-start from a working app, not a blank page. Success = a builder can clone it, run it,
-rebrand it via one config file, and trust every screen enough to build on top without
-first fixing it.
+A sample app that turns a raw video library on Backblaze B2 into a scene-indexed,
+visually searchable asset with no external API dependency. PySceneDetect splits each
+video into scenes; a bundled ffmpeg cuts a clip and keyframe per scene; OpenCLIP embeds
+each keyframe; and a FAISS index plus JSON metadata are written back to B2. A search UI
+answers text-to-scene and image-to-scene queries. It demonstrates sustained multimodal
+write to B2 (one video → many clips, keyframes, and embeddings) with B2 as the sole
+storage layer, accessed only through the S3-compatible API. Success = a builder can
+clone it, add B2 credentials (the only secret), ingest a video, build its scene index
+on local CPU, and search it — trusting every screen enough to build on top.
 
 ## Brand Personality
 

@@ -1,184 +1,113 @@
-<!-- last_verified: 2026-07-29 -->
-# Vibe Coding Starter Kit
+<!-- last_verified: 2026-08-03 -->
+# CLIP Video Scene Search
 
-Stop wiring boilerplate and start building. This open-source starter kit gives vibe coders and AI coding agents a production-ready foundation — a full-stack TypeScript + Python template with a pre-built dashboard UI, file upload system, and **[Backblaze B2](https://www.backblaze.com/sign-up/ai-cloud-storage?utm_source=github&utm_medium=referral&utm_campaign=ai_artifacts&utm_content=b2ai-clip-video-scene-search)** cloud storage already integrated. Save thousands of tokens on setup prompts, skip the "build me a dashboard from scratch" loop, and go straight to building your app's unique features.
+Turn a raw video library on **[Backblaze B2](https://www.backblaze.com/cloud-storage?utm_source=github&utm_medium=referral&utm_campaign=ai_artifacts&utm_content=b2ai-clip-video-scene-search)** into a scene-indexed, visually searchable asset — with no external API dependency. For each source video, [PySceneDetect](https://www.scenedetect.com/) splits it into scenes; per scene the app cuts a scene clip and extracts a representative keyframe with a bundled ffmpeg; [OpenCLIP](https://github.com/mlfoundations/open_clip) embeds each keyframe; and a [FAISS](https://github.com/facebookresearch/faiss) scene index plus JSON metadata are written back to B2. A search UI then answers **text-to-scene** ("a person walking on a beach") and **image-to-scene** (upload a still) queries, returning matching scenes with a keyframe thumbnail, start/end timecode, and a link to the scene clip in B2.
+
+Everything runs on local open-source models — **your B2 credentials are the only secret; there is no second API key.**
 
 **What you get out of the box:**
-- Full-stack dashboard UI (Next.js 16 + React 19 + Tailwind v4 + shadcn/ui)
-- File upload with drag-and-drop, progress tracking, and metadata extraction
-- File browser with preview, download, and delete
-- FastAPI backend with strict layered architecture and structural tests
-- Agent-optimized docs — your AI coding agent can read the repo and start contributing immediately
+- Ingest → segment → keyframe → embed → search pipeline, all persisted to B2 via the S3-compatible API
+- Text-to-scene and image-to-scene search over a FAISS index
+- A sample-scoped **Library** of your videos plus the generic full-bucket **Files** explorer
+- Full-stack dashboard UI (Next.js 16 + React 19 + Tailwind v4 + shadcn/ui) and a layered FastAPI backend with structural tests
+- CPU-by-default compute with automatic CUDA → Apple MPS → CPU device selection — no GPU required
 
-## What it looks like
+## Why Backblaze B2
 
-**Dashboard** — stats, upload activity, and recent uploads at a glance:
+This sample demonstrates **sustained multimodal write**: one video fans out into many objects — a source, a clip and keyframe per scene, a per-keyframe embedding, and a global index — so a one-hour video can become hundreds of B2 objects. B2 is the single storage layer for the whole pipeline, accessed only through the S3-compatible API with a custom user agent (`b2ai-clip-video-scene-search`) and the standard `B2_*` environment variables. There is no application database: the meta.json per video, the `.npy` embeddings, and the FAISS index all live in the bucket.
 
-![Dashboard view showing stat cards, upload activity chart, and recent uploads table](docs/images/b2-starterkit-dashboard1.png)
-
-**File browser** — tree view with preview, download, and delete:
-
-![File browser view showing a tree of files with hover actions](docs/images/b2-starterkit-fileview2.png)
-
-## Agent-First Architecture
-
-This repo is optimized for coding agents. Use the template, point your agent at it, and start building.
-
-The structure follows the principle that **repository knowledge is the system of record**. Anything an agent can't access in-context doesn't exist — so everything it needs to reason about the codebase is versioned, co-located, and discoverable from the repo itself.
-
-### How it works
-
-**[AGENTS.md](AGENTS.md) is the single source of truth for all coding agents.** Its bounded, agent-sized entry point gives agents the repository layout, architectural invariants, commands, conventions, and pointers to deeper docs. Agent-specific files (CLAUDE.md, GEMINI.md, Copilot instructions, etc.) are thin pointers back to AGENTS.md.
-
-**Architecture is enforced mechanically, not by convention.** Layering rules, import boundaries, file size limits, and SDK containment are verified by structural tests and lints that run on every change. When rules are enforceable by code, agents follow them reliably.
-
-**The knowledge base is structured for progressive disclosure:**
+## How it works
 
 ```
-AGENTS.md              Single source of truth — layout, invariants, commands, conventions
-ARCHITECTURE.md        System layout, layering rules, data flows
-docs/
-  features/            Feature docs (inputs, outputs, flows, edge cases)
-  app-workflows.md     User journeys
-  dev-workflows.md     Engineering workflows and testing
-  SECURITY.md          Security principles
-  RELIABILITY.md       Reliability expectations
-  exec-plans/          Execution plans and tech debt tracker
+Ingest (create)                      Build scene index (run)
+video ──> PySceneDetect ──> per scene: cut clip + keyframe ──> B2
+                                                    │
+                                        keyframe ──> OpenCLIP ──> vector (.npy) ──> B2
+                                                    │
+                                        all vectors ──> FAISS IndexFlatIP ──> index + mapping ──> B2
+
+Search: text / image ──> OpenCLIP ──> cosine over the FAISS index ──> matching scenes
 ```
 
-### Key design decisions
+The cheap step (segmentation) runs on **create**; the heavy step (CLIP embedding, which downloads the model on first use) is deferred to the **Build scene index** action, so setup stays light.
 
-| Principle | Implementation |
-|-----------|---------------|
-| Give agents a single source of truth | AGENTS.md — bounded layout, invariants, commands, conventions |
-| Enforce invariants mechanically | Structural tests + ruff + ESLint verify boundaries |
-| DRY documentation | Each fact lives in one place; no redundant files to drift |
-| Strict layered architecture | `types -> config -> repo -> service -> runtime`, enforced by tests |
-| Prefer boring, composable libraries | stdlib logging over frameworks, Pydantic over ad-hoc validation |
-| Contain external SDKs | `boto3` only in `repo/` layer — verified by structural test |
-| Keep files agent-sized | 300-line limit per file, enforced by test |
-| Docs updated with code | Same-PR requirement prevents documentation rot |
-| Structured observability | JSON logging, `/metrics` endpoint, request tracing |
+## B2 object layout
 
-This approach draws from [OpenAI's experience building with Codex](https://openai.com/index/harness-engineering/): agents work best in environments with strict boundaries, predictable structure, and progressive context disclosure.
+```
+videos/<id>/source.<ext>          source video (uploaded or seeded)
+videos/<id>/meta.json             video + scene metadata (title, status, scenes[])
+scenes/clips/<id>/<n>.mp4         per-scene clips
+scenes/keyframes/<id>/<n>.jpg     per-scene keyframes
+scenes/embed/<id>/<n>.npy         per-keyframe CLIP vectors
+scenes/index/index.faiss          global FAISS scene index
+scenes/index/mapping.json         row -> scene mapping for the index
+```
 
 ## Quick Start
 
-You need: Node.js >= 20, pnpm >= 9, Python >= 3.11, and a free **[Backblaze B2 account](https://www.backblaze.com/sign-up/ai-cloud-storage?utm_source=github&utm_medium=referral&utm_campaign=ai_artifacts&utm_content=b2ai-clip-video-scene-search)**.
+You need: Node.js >= 20, pnpm >= 9, Python >= 3.11, and a free **[Backblaze B2 account](https://www.backblaze.com/cloud-storage?utm_source=github&utm_medium=referral&utm_campaign=ai_artifacts&utm_content=b2ai-clip-video-scene-search)**.
 
 ### Supported local environments
 
-Local scripts are supported on macOS, Linux, and WSL2. Native Windows is not
-supported yet because the dev scripts use POSIX shell syntax and
-`services/api/.venv/bin/*` paths; use WSL2 on Windows.
+Local scripts are supported on macOS, Linux, and WSL2. Native Windows is not supported yet because the dev scripts use POSIX shell syntax and `services/api/.venv/bin/*` paths; use WSL2 on Windows. The first **Build scene index** run downloads the OpenCLIP weights (~600 MB for the default ViT-B-32 model), so a sandboxed environment needs outbound network permission for that step.
 
-Cloud or sandboxed coding-agent environments also need permission for dependency
-downloads during `pnpm run setup`. Running the app or Playwright E2E requires
-localhost server binding for the web server on port 3000 and the API on
-8000-8009, plus permission to launch the Playwright Chromium browser. If a
-sandbox denies binding, `pnpm run doctor` and `scripts/pick-port.mjs` report
-`EPERM`/`EACCES` as a permissions issue instead of a busy port. A host without
-IPv6 (many containers) is not treated as a failure — the IPv4 probe decides.
-
-### Start a new project
-
-**Option 1: GitHub Template (recommended)**
-
-Click the green **"Use this template"** button at the top of this repo, name your project, then:
-
-```bash
-git clone https://github.com/yourorg/my-cool-app.git
-cd my-cool-app
-```
-
-**Option 2: Clone and reinitialize**
-
-```bash
-git clone https://github.com/backblaze-b2-samples/clip-video-scene-search.git my-cool-app
-cd my-cool-app
-rm -rf .git
-git init
-git add .
-git commit -m "Initial commit from clip-video-scene-search"
-```
-
-Either way you get a clean project with no upstream history — ready to push to your own repo and point your agent at it.
-
-### Setup
-
-**1. Run setup**
+### 1. Run setup
 
 ```bash
 pnpm run setup
 ```
 
-This copies `.env.example` to `.env` only when `.env` does not already exist,
-installs workspace dependencies from `pnpm-lock.yaml`, creates
-`services/api/.venv` if missing, and installs the API's committed Python 3.11
-resolution from `services/api/requirements.lock`. It is safe to rerun and never
-overwrites an existing `.env`.
+This copies `.env.example` to `.env` only when `.env` does not already exist, installs workspace dependencies from `pnpm-lock.yaml`, creates `services/api/.venv` if missing, and installs the API's committed Python resolution from `services/api/requirements.lock`. It is safe to rerun and never overwrites an existing `.env`.
 
-> Use the `pnpm run` form: `setup` (like `doctor`) is a built-in pnpm command
-> before pnpm 11, so bare `pnpm setup` would run pnpm's own command instead of
-> this script.
+> Use the `pnpm run` form: `setup` (like `doctor`) is a built-in pnpm command before pnpm 11, so bare `pnpm setup` would run pnpm's own command instead of this script.
 
-**2. Add your B2 credentials**
+### 2. Add your B2 credentials
 
-Open `.env` in your editor and keep it visible. Then head to the [Backblaze B2 dashboard](https://secure.backblaze.com/b2_buckets.htm?utm_source=github&utm_medium=referral&utm_campaign=ai_artifacts&utm_content=b2ai-clip-video-scene-search) and:
+Open `.env` and fill in the standard B2 values from the [Backblaze B2 dashboard](https://secure.backblaze.com/b2_buckets.htm?utm_source=github&utm_medium=referral&utm_campaign=ai_artifacts&utm_content=b2ai-clip-video-scene-search). The S3 endpoint is **derived from the region**, so there is no endpoint variable:
 
-1. **Create a bucket.** B2 will show two values — paste each into `.env`:
-   - **Bucket Unique Name** → `B2_BUCKET_NAME`
-   - **Endpoint** → `B2_ENDPOINT`
-2. **Create an application key** with `Read and Write` permission. B2 will show two values — paste each into `.env`:
-   - **keyID** → `B2_KEY_ID`
-   - **applicationKey** → `B2_APPLICATION_KEY` *(only shown once — paste it now)*
+| Variable | Where it comes from |
+|----------|---------------------|
+| `B2_APPLICATION_KEY_ID` | Application key **keyID** (`Read and Write`) |
+| `B2_APPLICATION_KEY` | Application key **applicationKey** (shown once) |
+| `B2_BUCKET_NAME` | Bucket **Unique Name** |
+| `B2_REGION` | The region in the bucket **Endpoint** (e.g. `us-west-004`) |
+| `B2_PUBLIC_URL_BASE` | *(optional)* base URL for public object links |
 
-> Want a walkthrough? See the docs for [creating a bucket](https://www.backblaze.com/docs/cloud-storage-create-and-manage-buckets) and [creating app keys](https://www.backblaze.com/docs/cloud-storage-create-and-manage-app-keys).
+### 3. Seed a demo video (optional)
 
-**3. Run it**
+```bash
+pnpm run seed
+```
+
+`scripts/seed_sample_video.py` is fully offline, deterministic, and idempotent: it generates a small synthetic multi-scene clip with the bundled ffmpeg, uploads it, and segments it to status `segmented` (no CLIP model download). Open the Library and click **Build scene index** to embed the keyframes and enable search.
+
+### 4. Run it
 
 ```bash
 pnpm dev
 ```
 
-That's it. Frontend at `localhost:3000`, API at `localhost:8000`. Upload a file and see it working. Interactive API docs (Swagger UI) are at `localhost:8000/docs`, with ReDoc at `/redoc`.
+Frontend at `localhost:3000`, API at `localhost:8000`. Ingest a video (or use the seed), build its scene index, then search. Interactive API docs are at `localhost:8000/docs`.
 
-`pnpm dev` runs the preflight check first — it catches the common setup gotchas (wrong Node/Python version, missing venv, missing or placeholder `.env`, ports already taken) and tells you exactly how to fix each one. Run it standalone any time with `pnpm run doctor`.
-
-## Building Your App
-
-When you adapt this kit for a new app, keep the shared scaffolding and only swap out what's app-specific:
-
-- **Keep** the UI kit (`apps/web/src/components/ui/` + design tokens in `globals.css` + `/design`).
-- **Keep** the File Explorer (`/files`) and Upload (`/upload`) pages and their sidebar nav entries — they're the reusable B2-backed surface.
-- **Adapt** the Dashboard (`/`) to your use case — replace the default stats, chart, and recent uploads with metrics that reflect what your app actually does.
-- **Rebrand** by editing a single file: `apps/web/src/lib/app-config.ts` holds the app name and description (`APP_NAME`, `APP_DESCRIPTION`). Changing them there updates the page title, sidebar, and breadcrumb everywhere — no other files to touch.
-
-Full contract and rationale: [AGENTS.md §2 — Building on This Starter Kit](AGENTS.md#2-building-on-this-starter-kit).
+`pnpm dev` runs `pnpm run doctor` first — it catches the common setup gotchas (wrong Node/Python version, missing venv, missing or placeholder `.env`, ports already taken).
 
 ## Core Features
 
-- [File Upload](docs/features/file-upload.md) — drag-and-drop upload with real-time progress
-- [File Browser](docs/features/file-browser.md) — list, preview, download, delete files
-- [Dashboard](docs/features/dashboard.md) — stats cards, upload chart, recent uploads
-- [Metadata Extraction](docs/features/metadata-extraction.md) — image dimensions, EXIF, PDF info, checksums
-- [Design System](docs/design-system.md) — tokens, primitives, AI elements, the blaze generating loader, and inline `ErrorState` / `EmptyState` patterns. Live preview at `/design`.
-- Inline error handling — fetch failures surface *what's wrong* (API offline, 401, 5xx) and offer a Retry, instead of silently rendering empty state.
-- Single-source config — one `.env` at the repo root powers both API and web app, validated at startup so misconfig fails fast with a readable message.
-- Centralized data layer — every fetch goes through TanStack Query hooks in `apps/web/src/lib/queries.ts`; cache invalidation is one call after a mutation.
-- Checked API contract — `docs/api/openapi.json` plus `pnpm contract:check` catch FastAPI/client route drift.
-- Structural tests — verify layering rules, import boundaries, SDK containment, file size limits
-- Structured JSON logging — every request traced with `request_id` and timing
-- `/health` endpoint — B2 connectivity check
-- `/metrics` endpoint — Prometheus-format counters (request count, latency, uploads)
-- `/docs` + `/redoc` — auto-generated interactive API docs (toggle off in prod with `ENABLE_DOCS=false`)
-- Per-IP rate limiting and magic-byte upload validation — see [SECURITY.md](docs/SECURITY.md)
+- [Scene Detection](docs/features/scene-detection.md) — PySceneDetect `ContentDetector` splits each video into scenes
+- [Scene Clips & Keyframes](docs/features/scene-clips-keyframes.md) — per scene, cut a clip and extract a keyframe with the bundled ffmpeg
+- [CLIP Embedding](docs/features/clip-embedding.md) — OpenCLIP embeds each keyframe; CPU-default, CUDA/MPS autodetect
+- [FAISS Scene Index](docs/features/faiss-scene-index.md) — cosine index + JSON mapping stored in B2
+- [Scene Search](docs/features/scene-search.md) — text-to-scene and image-to-scene queries
+- [Video Library](docs/features/video-library.md) — sample-scoped library + the generic Files explorer
+- [Dashboard](docs/features/dashboard.md) — library metrics and recent videos
+- [File Browser](docs/features/file-browser.md) — the generic full-bucket explorer (kept from the starter)
+- [Design System](docs/design-system.md) — tokens, primitives, error/empty states. Live at `/design`.
 
 ## Tech Stack
 
-- TypeScript, Next.js 16, React 19, Tailwind v4, shadcn/ui, Recharts
-- TanStack Query — caching, dedup, retry, stale-while-revalidate for every fetch
-- Python 3.11+, FastAPI, boto3, Pydantic v2, Pillow, PyPDF2
+- TypeScript, Next.js 16, React 19, Tailwind v4, shadcn/ui, Recharts, TanStack Query
+- Python 3.11+, FastAPI, boto3, Pydantic v2
+- PySceneDetect, OpenCLIP (open_clip_torch) + PyTorch, FAISS (faiss-cpu), imageio-ffmpeg (bundled ffmpeg)
 - Backblaze B2 (S3-compatible object storage)
 - pnpm workspaces (monorepo)
 
@@ -186,72 +115,42 @@ Full contract and rationale: [AGENTS.md §2 — Building on This Starter Kit](AG
 
 | Command | What it does |
 |---------|-------------|
-| `pnpm run setup` | Idempotently copy `.env.example` to `.env` only if missing, install workspace dependencies, create the backend venv, and install the locked API dependencies |
-| `pnpm run doctor` | Preflight environment check (also runs automatically before `pnpm dev`) |
+| `pnpm run setup` | Idempotent cold-start setup (`.env`, workspace deps, backend venv, locked API deps) |
+| `pnpm run seed` | Seed a synthetic multi-scene demo video into B2 (offline, idempotent) |
+| `pnpm run doctor` | Preflight environment check (also runs before `pnpm dev`) |
 | `pnpm dev` | Start frontend + backend |
 | `pnpm dev:web` | Frontend only |
 | `pnpm dev:api` | Backend only |
 | `pnpm contract:export` | Export deterministic FastAPI OpenAPI JSON to `docs/api/openapi.json` |
 | `pnpm contract:check` | Verify the checked-in OpenAPI artifact and frontend API client route registry |
 | `pnpm check:agent-docs` | Validate agent shims, command docs, CI claims, and `.env` ignore coverage |
-| `pnpm verify` | Credential-free canonical non-live pre-PR suite — runs `check:agent-docs`, `verify:api`, then `verify:web` |
+| `pnpm verify` | Credential-free non-live pre-PR suite — `check:agent-docs`, `verify:api`, `verify:web` |
 | `pnpm verify:api` | Backend half: API lint, API tests, structure tests |
 | `pnpm verify:web` | Frontend half: web lint, web unit tests, web typecheck + build |
-| `pnpm verify:full` | `pnpm run doctor`, then `pnpm verify`, then Playwright E2E; requires populated `.env`, local server/browser permission, port 3000 free, and Chromium installed |
+| `pnpm verify:full` | `pnpm run doctor`, then `pnpm verify`, then Playwright E2E (browser + live prerequisites) |
 | `pnpm build` | Build frontend |
 | `pnpm lint` | Lint frontend |
 | `pnpm lint:api` | Lint backend (ruff) |
 | `pnpm test:web` | Run frontend unit tests (vitest) |
-| `pnpm test:api` | Run backend tests |
+| `pnpm test:api` | Run backend tests (pytest) |
 | `pnpm check:structure` | Verify layering rules |
-| `pnpm test:e2e` | Playwright E2E smoke tests (run `pnpm --filter @clip-video-scene-search/web exec playwright install chromium` once first) |
+| `pnpm test:e2e` | Playwright E2E smoke tests |
 
-Run `pnpm run setup` once before local development, and rerun it after pulling
-dependency changes. It installs workspace dependencies from `pnpm-lock.yaml`
-and API dependencies from `services/api/requirements.lock`. If you add a Node
-dependency yourself, run `pnpm install` to refresh `pnpm-lock.yaml`; for an API
-dependency, follow the reviewed refresh workflow in
-[docs/dev-workflows.md](docs/dev-workflows.md#python-dependency-updates). Run
-`pnpm verify` before opening a PR; it needs
-`services/api/.venv` from setup. Run `pnpm verify:full` when you can start the
-local app stack and browser tests: `.env` must contain real B2 values, local
-server binding must be permitted, Playwright's Chromium browser must be
-installed, and port 3000 must be free (or already serving this app). Playwright
-waits on `http://localhost:3000`,
-but `next dev` falls back to the next free port when 3000 is taken — so an
-unrelated process on 3000 makes the E2E run time out. The API starts at
-`localhost:8000` or the next free port chosen by `scripts/dev.sh`.
-
-`pnpm verify` needs neither B2 credentials nor a browser. For parallel agents,
-use one Git worktree per verification run as documented in [the verification
-workflow](docs/dev-workflows.md#non-live-verification). That page also covers
-normal timing, slow-run recovery, and installing the optional local pre-commit
-hooks.
+Run `pnpm run setup` once before local development. `pnpm verify` needs neither B2 credentials nor a browser and never downloads the CLIP model — the ML stack is lazy-imported, so the backend tests exercise routing and the scene-index logic without pulling weights.
 
 ## Documentation Map
 
 | Doc | Purpose |
 |-----|---------|
 | [AGENTS.md](AGENTS.md) | Agent table of contents — start here |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | System layout, layering, data flows |
-| [docs/features/](docs/features/) | Feature docs (upload, browser, dashboard, metadata) |
-| [docs/design-system.md](docs/design-system.md) | Design tokens, primitives, AI elements, loader, error/empty states |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | System layout, layering, data flows, B2 prefixes |
+| [docs/features/](docs/features/) | Feature docs (scene detection, clips/keyframes, embedding, index, search, library) |
 | [docs/app-workflows.md](docs/app-workflows.md) | User journeys |
 | [docs/dev-workflows.md](docs/dev-workflows.md) | Engineering workflows and testing |
 | [docs/SECURITY.md](docs/SECURITY.md) | Security principles |
 | [docs/RELIABILITY.md](docs/RELIABILITY.md) | Reliability expectations |
 | [docs/exec-plans/](docs/exec-plans/) | Execution plans and tech debt tracker |
 
-## Contributing
-
-Start with [AGENTS.md](AGENTS.md). It's the map — everything else is discoverable from there. For local commit hooks, follow [the pre-commit workflow](docs/dev-workflows.md#pre-commit).
-
 ## License
 
 MIT License - see [LICENSE](LICENSE) for details.
-
-## Claude Agent B2 Skill
-
-Manage Backblaze B2 from your terminal using natural language (list/search, audits, stale or large file detection, security checks, safe cleanup).
-
-Repo: [https://github.com/backblaze-b2-samples/claude-skill-b2-cloud-storage](https://github.com/backblaze-b2-samples/claude-skill-b2-cloud-storage)
