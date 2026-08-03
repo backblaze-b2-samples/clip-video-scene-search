@@ -1,6 +1,61 @@
 {
   "components": {
     "schemas": {
+      "Body_create_video_endpoint_videos_post": {
+        "properties": {
+          "clip_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Clip Model"
+          },
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          },
+          "scene_threshold": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scene Threshold"
+          },
+          "title": {
+            "default": "",
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_create_video_endpoint_videos_post",
+        "type": "object"
+      },
+      "Body_search_image_endpoint_search_image_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_search_image_endpoint_search_image_post",
+        "type": "object"
+      },
       "Body_upload_upload_post": {
         "properties": {
           "file": {
@@ -321,6 +376,284 @@
         "title": "HTTPValidationError",
         "type": "object"
       },
+      "LibrarySummary": {
+        "description": "Sample-scoped footprint over the app's own B2 prefixes (Library view).",
+        "properties": {
+          "embedded_scenes": {
+            "title": "Embedded Scenes",
+            "type": "integer"
+          },
+          "index_present": {
+            "title": "Index Present",
+            "type": "boolean"
+          },
+          "indexed_videos": {
+            "title": "Indexed Videos",
+            "type": "integer"
+          },
+          "scene_asset_bytes": {
+            "title": "Scene Asset Bytes",
+            "type": "integer"
+          },
+          "segmented_videos": {
+            "title": "Segmented Videos",
+            "type": "integer"
+          },
+          "source_bytes": {
+            "title": "Source Bytes",
+            "type": "integer"
+          },
+          "total_bytes": {
+            "title": "Total Bytes",
+            "type": "integer"
+          },
+          "total_bytes_human": {
+            "title": "Total Bytes Human",
+            "type": "string"
+          },
+          "total_scenes": {
+            "title": "Total Scenes",
+            "type": "integer"
+          },
+          "total_videos": {
+            "title": "Total Videos",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total_videos",
+          "segmented_videos",
+          "indexed_videos",
+          "total_scenes",
+          "embedded_scenes",
+          "source_bytes",
+          "scene_asset_bytes",
+          "total_bytes",
+          "total_bytes_human",
+          "index_present"
+        ],
+        "title": "LibrarySummary",
+        "type": "object"
+      },
+      "RenameVideoRequest": {
+        "properties": {
+          "title": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "title": "RenameVideoRequest",
+        "type": "object"
+      },
+      "Scene": {
+        "properties": {
+          "clip_key": {
+            "title": "Clip Key",
+            "type": "string"
+          },
+          "clip_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Clip Url"
+          },
+          "embedded": {
+            "default": false,
+            "title": "Embedded",
+            "type": "boolean"
+          },
+          "end_seconds": {
+            "title": "End Seconds",
+            "type": "number"
+          },
+          "end_timecode": {
+            "title": "End Timecode",
+            "type": "string"
+          },
+          "keyframe_key": {
+            "title": "Keyframe Key",
+            "type": "string"
+          },
+          "keyframe_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Keyframe Url"
+          },
+          "number": {
+            "title": "Number",
+            "type": "integer"
+          },
+          "start_seconds": {
+            "title": "Start Seconds",
+            "type": "number"
+          },
+          "start_timecode": {
+            "title": "Start Timecode",
+            "type": "string"
+          }
+        },
+        "required": [
+          "number",
+          "start_seconds",
+          "end_seconds",
+          "start_timecode",
+          "end_timecode",
+          "keyframe_key",
+          "clip_key"
+        ],
+        "title": "Scene",
+        "type": "object"
+      },
+      "SearchHit": {
+        "properties": {
+          "clip_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Clip Url"
+          },
+          "end_seconds": {
+            "title": "End Seconds",
+            "type": "number"
+          },
+          "end_timecode": {
+            "title": "End Timecode",
+            "type": "string"
+          },
+          "keyframe_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Keyframe Url"
+          },
+          "scene_number": {
+            "title": "Scene Number",
+            "type": "integer"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          },
+          "start_seconds": {
+            "title": "Start Seconds",
+            "type": "number"
+          },
+          "start_timecode": {
+            "title": "Start Timecode",
+            "type": "string"
+          },
+          "video_id": {
+            "title": "Video Id",
+            "type": "string"
+          },
+          "video_title": {
+            "title": "Video Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "video_id",
+          "video_title",
+          "scene_number",
+          "start_seconds",
+          "end_seconds",
+          "start_timecode",
+          "end_timecode",
+          "score"
+        ],
+        "title": "SearchHit",
+        "type": "object"
+      },
+      "SearchResponse": {
+        "properties": {
+          "hits": {
+            "items": {
+              "$ref": "#/components/schemas/SearchHit"
+            },
+            "title": "Hits",
+            "type": "array"
+          },
+          "mode": {
+            "title": "Mode",
+            "type": "string"
+          },
+          "query": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Query"
+          },
+          "top_k": {
+            "title": "Top K",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "mode",
+          "top_k"
+        ],
+        "title": "SearchResponse",
+        "type": "object"
+      },
+      "TextSearchRequest": {
+        "properties": {
+          "query": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Query",
+            "type": "string"
+          },
+          "top_k": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Top K"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "TextSearchRequest",
+        "type": "object"
+      },
       "UploadStats": {
         "properties": {
           "total_downloads": {
@@ -393,11 +726,192 @@
         ],
         "title": "ValidationError",
         "type": "object"
+      },
+      "Video": {
+        "properties": {
+          "clip_model": {
+            "title": "Clip Model",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "duration_seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Seconds"
+          },
+          "embedded_count": {
+            "title": "Embedded Count",
+            "type": "integer"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "scene_count": {
+            "title": "Scene Count",
+            "type": "integer"
+          },
+          "scene_threshold": {
+            "title": "Scene Threshold",
+            "type": "number"
+          },
+          "source_filename": {
+            "title": "Source Filename",
+            "type": "string"
+          },
+          "source_key": {
+            "title": "Source Key",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "status",
+          "source_key",
+          "source_filename",
+          "scene_count",
+          "embedded_count",
+          "scene_threshold",
+          "clip_model",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "Video",
+        "type": "object"
+      },
+      "VideoDetail": {
+        "properties": {
+          "clip_model": {
+            "title": "Clip Model",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "duration_seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Seconds"
+          },
+          "embedded_count": {
+            "title": "Embedded Count",
+            "type": "integer"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "scene_count": {
+            "title": "Scene Count",
+            "type": "integer"
+          },
+          "scene_threshold": {
+            "title": "Scene Threshold",
+            "type": "number"
+          },
+          "scenes": {
+            "items": {
+              "$ref": "#/components/schemas/Scene"
+            },
+            "title": "Scenes",
+            "type": "array"
+          },
+          "source_filename": {
+            "title": "Source Filename",
+            "type": "string"
+          },
+          "source_key": {
+            "title": "Source Key",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "status",
+          "source_key",
+          "source_filename",
+          "scene_count",
+          "embedded_count",
+          "scene_threshold",
+          "clip_model",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "VideoDetail",
+        "type": "object"
       }
     }
   },
   "info": {
-    "description": "File upload and management API backed by Backblaze B2",
+    "description": "Scene-indexed video search backed by Backblaze B2 \u2014 PySceneDetect segmentation, CLIP keyframe embeddings, and FAISS scene search.",
     "title": "CLIP Video Scene Search API",
     "version": "0.1.0"
   },
@@ -914,6 +1428,27 @@
         ]
       }
     },
+    "/library/summary": {
+      "get": {
+        "operationId": "library_summary_endpoint_library_summary_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibrarySummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Library Summary Endpoint",
+        "tags": [
+          "videos"
+        ]
+      }
+    },
     "/metrics": {
       "get": {
         "operationId": "metrics_metrics_get",
@@ -930,6 +1465,108 @@
         "summary": "Metrics",
         "tags": [
           "metrics"
+        ]
+      }
+    },
+    "/search/image": {
+      "post": {
+        "operationId": "search_image_endpoint_search_image_post",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "top_k",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 100,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Top K"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_search_image_endpoint_search_image_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Search Image Endpoint",
+        "tags": [
+          "search"
+        ]
+      }
+    },
+    "/search/text": {
+      "post": {
+        "operationId": "search_text_endpoint_search_text_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TextSearchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Search Text Endpoint",
+        "tags": [
+          "search"
         ]
       }
     },
@@ -971,6 +1608,243 @@
         "summary": "Upload",
         "tags": [
           "upload"
+        ]
+      }
+    },
+    "/videos": {
+      "get": {
+        "operationId": "list_videos_endpoint_videos_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Video"
+                  },
+                  "title": "Response List Videos Endpoint Videos Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Videos Endpoint",
+        "tags": [
+          "videos"
+        ]
+      },
+      "post": {
+        "operationId": "create_video_endpoint_videos_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_create_video_endpoint_videos_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Video"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Video Endpoint",
+        "tags": [
+          "videos"
+        ]
+      }
+    },
+    "/videos/{video_id}": {
+      "delete": {
+        "operationId": "delete_video_endpoint_videos__video_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "video_id",
+            "required": true,
+            "schema": {
+              "title": "Video Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Video Endpoint",
+        "tags": [
+          "videos"
+        ]
+      },
+      "get": {
+        "operationId": "get_video_endpoint_videos__video_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "video_id",
+            "required": true,
+            "schema": {
+              "title": "Video Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VideoDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Video Endpoint",
+        "tags": [
+          "videos"
+        ]
+      },
+      "patch": {
+        "operationId": "rename_video_endpoint_videos__video_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "video_id",
+            "required": true,
+            "schema": {
+              "title": "Video Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RenameVideoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Video"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Rename Video Endpoint",
+        "tags": [
+          "videos"
+        ]
+      }
+    },
+    "/videos/{video_id}/index": {
+      "post": {
+        "description": "Kick off CLIP embedding + FAISS (re)build in the background.\n\nReturns immediately with status ``indexing``; the UI polls\n``GET /videos/{id}`` until it reaches ``indexed`` (or ``failed``).",
+        "operationId": "build_index_endpoint_videos__video_id__index_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "video_id",
+            "required": true,
+            "schema": {
+              "title": "Video Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Video"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Build Index Endpoint",
+        "tags": [
+          "videos"
         ]
       }
     }

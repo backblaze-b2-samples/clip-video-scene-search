@@ -8,6 +8,7 @@
     "dev": "sh scripts/dev.sh",
     "dev:web": "pnpm --filter @clip-video-scene-search/web dev",
     "dev:api": "cd services/api && .venv/bin/uvicorn main:app --reload --port ${API_PORT:-8000}",
+    "seed": "services/api/.venv/bin/python scripts/seed_sample_video.py",
     "build": "pnpm --filter @clip-video-scene-search/web build",
     "typecheck": "pnpm --filter @clip-video-scene-search/web typecheck",
     "contract:export": "services/api/.venv/bin/python services/api/scripts/export_openapi.py",
