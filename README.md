@@ -73,6 +73,15 @@ Open `.env` and fill in the standard B2 values from the [Backblaze B2 dashboard]
 | `B2_REGION` | The region in the bucket **Endpoint** (e.g. `us-west-004`) |
 | `B2_PUBLIC_URL_BASE` | *(optional)* base URL for public object links |
 
+**Optional model/pipeline settings** (defaults are sensible; override via `.env`):
+
+| Variable | Default | What it does |
+|----------|---------|--------------|
+| `CLIP_MODEL` | `ViT-B-32/laion2b_s34b_b79k` | The OpenCLIP embedding model, as `<arch>/<pretrained>`. This is a single **global** setting, not a per-video choice — every keyframe and query vector must share one dimensionality so they can live in the one shared FAISS index. Changing it after building indexes means rebuilding them. |
+| `CLIP_DEVICE` | *(empty = autodetect)* | Force a device (`cuda` / `mps` / `cpu`); empty auto-selects CUDA → Apple MPS → CPU. |
+| `SCENE_THRESHOLD` | `27.0` | Default PySceneDetect threshold (the Ingest form can override per video). |
+| `SEARCH_TOP_K` | `12` | Default number of scene hits a search returns. |
+
 ### 3. Seed a demo video (optional)
 
 ```bash

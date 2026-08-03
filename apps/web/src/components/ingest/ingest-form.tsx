@@ -38,24 +38,13 @@ const THRESHOLDS = [
   { value: "27", label: "27 — balanced (default)" },
   { value: "35", label: "35 — fewer, coarser scenes" },
 ];
-const CLIP_MODELS = [
-  {
-    value: "ViT-B-32/laion2b_s34b_b79k",
-    label: "ViT-B-32 (laion2b) — fast, ~600 MB (default)",
-  },
-  {
-    value: "ViT-L-14/laion2b_s32b_b82k",
-    label: "ViT-L-14 (laion2b) — higher quality, larger",
-  },
-];
 
+// The CLIP embedding model is a single global deploy setting (CLIP_MODEL), not
+// a per-video choice — every keyframe vector must share one dimensionality for
+// the one shared FAISS index — so it is intentionally NOT a form field here.
 const ingestSchema = z.object({
   title: z.string().max(200).optional(),
   scene_threshold: z.enum(["20", "27", "35"]),
-  clip_model: z.enum([
-    "ViT-B-32/laion2b_s34b_b79k",
-    "ViT-L-14/laion2b_s32b_b82k",
-  ]),
 });
 
 type IngestValues = z.infer<typeof ingestSchema>;
@@ -75,7 +64,6 @@ export function IngestForm() {
     defaultValues: {
       title: "",
       scene_threshold: "27",
-      clip_model: "ViT-B-32/laion2b_s34b_b79k",
     },
   });
 
@@ -96,7 +84,6 @@ export function IngestForm() {
         {
           title: values.title?.trim() || baseName(file.name),
           scene_threshold: values.scene_threshold,
-          clip_model: values.clip_model,
         },
         (pct) => setProgress(pct),
       );
@@ -177,37 +164,9 @@ export function IngestForm() {
                   </Select>
                   <FormDescription>
                     PySceneDetect content threshold. Lower detects more cuts; 27
-                    is a good default for most footage.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="clip_model"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>CLIP model</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="w-full sm:w-80">
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {CLIP_MODELS.map((m) => (
-                        <SelectItem key={m.value} value={m.value}>
-                          {m.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormDescription>
-                    Embedding model used when you build the scene index. Weights
-                    download on first use; ViT-B-32 is the smaller, faster
-                    default.
+                    is a good default for most footage. The CLIP embedding model
+                    is a global deploy setting (<code>CLIP_MODEL</code>), not a
+                    per-video choice.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

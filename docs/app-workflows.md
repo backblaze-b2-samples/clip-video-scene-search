@@ -6,7 +6,7 @@ User journeys inside the application.
 ## Ingest a Video (create)
 
 - User navigates to `/ingest`
-- Chooses a video file, optionally sets a **Title** (a free-text field; the placeholder shows the default derived from the file name), and picks a **Detection threshold** (20 / 27 / 35) and a **CLIP model** from selectors — finite-option fields are never free text
+- Chooses a video file, optionally sets a **Title** (a free-text field; the placeholder shows the default derived from the file name), and picks a **Detection threshold** (20 / 27 / 35) from a selector — the finite-option field is never free text. The CLIP embedding model is a single global deploy setting (`CLIP_MODEL`), not a per-video choice, so it is not on the form.
 - On submit the source uploads to B2 with a progress bar, then the row switches to "Segmenting scenes on the server…"
 - The server runs PySceneDetect, and for each scene cuts a clip and extracts a keyframe (bundled ffmpeg), uploading each to B2
 - On success a toast reports the scene count and the user is taken to the video detail page with status **Segmented**

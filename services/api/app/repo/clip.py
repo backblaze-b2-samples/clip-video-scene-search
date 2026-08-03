@@ -48,7 +48,12 @@ def _parse_model_spec(spec: str) -> tuple[str, str]:
 
 
 def _load() -> dict:
-    """Load (once) and cache the model, preprocess transform, and tokenizer."""
+    """Load (once) and cache the model, preprocess transform, and tokenizer.
+
+    The model is the single GLOBAL ``settings.clip_model`` — there is no
+    per-video override. All keyframe and query vectors therefore share one
+    dimensionality, which is what lets them live in the one shared FAISS index.
+    """
     global _model_cache
     with _lock:
         if _model_cache is not None:

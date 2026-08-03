@@ -154,7 +154,7 @@ export function VideoDetail({ id }: { id: string }) {
           </div>
           <p className="mt-1.5 text-sm text-muted-foreground">
             {video.scene_count} scenes · {formatDuration(video.duration_seconds)} ·
-            threshold {video.scene_threshold} · {video.clip_model}
+            threshold {video.scene_threshold} · index model {video.clip_model}
           </p>
           {video.status === "failed" && video.error && (
             <p className="mt-2 text-sm text-[var(--attention)]">

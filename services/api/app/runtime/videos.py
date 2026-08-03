@@ -40,8 +40,10 @@ async def create_video_endpoint(
     file: UploadFile,
     title: str = Form(default=""),
     scene_threshold: float | None = Form(default=None),
-    clip_model: str | None = Form(default=None),
 ):
+    # NOTE: no clip_model form field — the embedding model is a single global
+    # deploy setting (settings.clip_model), not a per-video choice, so the one
+    # shared FAISS index never mixes vector dimensionalities.
     from fastapi.concurrency import run_in_threadpool
 
     # Stream with an early size cap (mirrors runtime/upload.py).
@@ -66,7 +68,6 @@ async def create_video_endpoint(
             filename=file.filename or "video.mp4",
             title=title,
             scene_threshold=scene_threshold,
-            clip_model=clip_model,
         )
     except RuntimeError as e:
         logger.warning("Video ingest failed: %s", e)

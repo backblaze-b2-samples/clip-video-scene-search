@@ -3,17 +3,6 @@
     "schemas": {
       "Body_create_video_endpoint_videos_post": {
         "properties": {
-          "clip_model": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Clip Model"
-          },
           "file": {
             "contentMediaType": "application/octet-stream",
             "title": "File",

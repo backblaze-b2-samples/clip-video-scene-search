@@ -47,19 +47,23 @@ def create_video(
     filename: str,
     title: str,
     scene_threshold: float | None = None,
-    clip_model: str | None = None,
     video_id: str | None = None,
 ) -> Video:
     """Upload + segment a source video into scene clips and keyframes.
 
     Returns the ``segmented`` Video. Idempotent-friendly: pass ``video_id`` to
     control the id (the seed script does this to stay idempotent).
+
+    The CLIP model is a single GLOBAL/deploy setting (``settings.clip_model``),
+    not a per-video choice: every keyframe vector must share one dimensionality
+    so they can live in the one shared FAISS index. We record it on the video as
+    read-only provenance (the model this index is/was built with).
     """
     video_id = video_id or vids.new_video_id()
     vids.validate_video_id(video_id)
     ext = (filename.rsplit(".", 1)[-1] if "." in filename else "mp4").lower()
     threshold = settings.scene_threshold if scene_threshold is None else scene_threshold
-    model = clip_model or settings.clip_model
+    model = settings.clip_model
 
     src_key = vids.source_key(video_id, ext)
     store.put_bytes(src_key, file_bytes, content_type=_content_type_for(ext))
@@ -135,7 +139,9 @@ def run_index(video_id: str) -> Video:
     """Embed every keyframe with CLIP and (re)build the global scene index."""
     meta = vids.load_meta(video_id)
     meta["status"] = "indexing"
-    meta["clip_model"] = meta.get("clip_model") or settings.clip_model
+    # Always the global index model — embedding uses settings.clip_model, so the
+    # recorded provenance must match it (never a stale per-video value).
+    meta["clip_model"] = settings.clip_model
     meta["updated_at"] = _now()
     vids.save_meta(meta)
 

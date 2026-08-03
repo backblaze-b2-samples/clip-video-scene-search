@@ -17,7 +17,7 @@ Embed scene keyframes (and search queries) into a shared vector space with OpenC
 
 ## Inputs
 - image bytes (keyframe or uploaded still) or text (query string)
-- settings: `clip_model` ("<arch>/<pretrained>", default `ViT-B-32/laion2b_s34b_b79k`), `clip_device` (empty = autodetect)
+- settings: `CLIP_MODEL` ("<arch>/<pretrained>", default `ViT-B-32/laion2b_s34b_b79k`) — a single **global** deploy setting, not a per-video choice, so every vector shares one dimensionality for the one shared FAISS index; `CLIP_DEVICE` (empty = autodetect)
 
 ## Outputs
 - A 1-D L2-normalized float32 vector (numpy) — cosine similarity is a plain dot product on these

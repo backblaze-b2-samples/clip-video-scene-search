@@ -2,7 +2,7 @@
 
 ## Register
 
-product
+The primary entity is a **Video** — a source video in the library — and the **scenes** derived from it (each a clip, a keyframe, and a CLIP embedding). Everything the product does revolves around ingesting, indexing, searching, and managing videos and their scenes on Backblaze B2.
 
 ## Users
 

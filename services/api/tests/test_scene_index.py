@@ -10,9 +10,9 @@ import pytest
 pytest.importorskip("faiss")
 pytest.importorskip("numpy")
 
-import numpy as np  # noqa: E402
+import numpy as np
 
-from app.repo import faiss_index  # noqa: E402
+from app.repo import faiss_index
 
 
 def _unit(vec) -> np.ndarray:

@@ -350,7 +350,7 @@ export async function searchByImage(file: File, topK?: number) {
 
 export function createVideo(
   file: File,
-  fields: { title: string; scene_threshold: string; clip_model: string },
+  fields: { title: string; scene_threshold: string },
   onProgress?: (percent: number) => void
 ): Promise<Video> {
   return new Promise((resolve, reject) => {
@@ -359,7 +359,6 @@ export function createVideo(
     formData.append("file", file);
     formData.append("title", fields.title);
     formData.append("scene_threshold", fields.scene_threshold);
-    formData.append("clip_model", fields.clip_model);
 
     xhr.upload.addEventListener("progress", (e) => {
       if (e.lengthComputable && onProgress) {

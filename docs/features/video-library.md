@@ -37,7 +37,7 @@ Manage the primary entity — a **Video** — across its full lifecycle: create,
 - **run** — "Build scene index": embeds keyframes + rebuilds FAISS, polled to `indexed` (`POST /videos/{id}/index`)
 
 ## Form UX conventions
-- Ingest (create) form: free-text **Title** with a placeholder hint (defaults to the file name); **Detection threshold** and **CLIP model** are `Select`s (finite sets), with safe-default guidance in `FormDescription` — no autofill button
+- Ingest (create) form: free-text **Title** with a placeholder hint (defaults to the file name); **Detection threshold** is a `Select` (finite set) with safe-default guidance in `FormDescription` — no autofill button. The CLIP embedding model is a single global deploy setting (`CLIP_MODEL`), not a per-video choice, so it is not a form field (it would corrupt the one shared FAISS index with mixed vector dimensions).
 - Rename (edit) form: single free-text Title, pre-filled with the current value, no default hint (a real resource)
 
 ## Library vs Files
