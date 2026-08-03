@@ -60,3 +60,78 @@ export interface UploadStats {
   uploads_today: number;
   total_downloads: number;
 }
+
+// --- Video scene search ---
+
+export type VideoStatus =
+  | "segmented"
+  | "indexing"
+  | "indexed"
+  | "failed"
+  | string;
+
+export interface Video {
+  id: string;
+  title: string;
+  status: VideoStatus;
+  source_key: string;
+  source_filename: string;
+  scene_count: number;
+  embedded_count: number;
+  duration_seconds: number | null;
+  scene_threshold: number;
+  clip_model: string;
+  error: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Scene {
+  number: number;
+  start_seconds: number;
+  end_seconds: number;
+  start_timecode: string;
+  end_timecode: string;
+  keyframe_key: string;
+  clip_key: string;
+  embedded: boolean;
+  keyframe_url: string | null;
+  clip_url: string | null;
+}
+
+export interface VideoDetail extends Video {
+  scenes: Scene[];
+}
+
+export interface SearchHit {
+  video_id: string;
+  video_title: string;
+  scene_number: number;
+  start_seconds: number;
+  end_seconds: number;
+  start_timecode: string;
+  end_timecode: string;
+  score: number;
+  keyframe_url: string | null;
+  clip_url: string | null;
+}
+
+export interface SearchResponse {
+  mode: "text" | "image" | string;
+  query: string | null;
+  top_k: number;
+  hits: SearchHit[];
+}
+
+export interface LibrarySummary {
+  total_videos: number;
+  segmented_videos: number;
+  indexed_videos: number;
+  total_scenes: number;
+  embedded_scenes: number;
+  source_bytes: number;
+  scene_asset_bytes: number;
+  total_bytes: number;
+  total_bytes_human: string;
+  index_present: boolean;
+}

@@ -3,13 +3,17 @@ import type {
   FileMetadata,
   FileMetadataDetail,
   FileUploadResponse,
+  LibrarySummary,
+  SearchResponse,
   UploadStats,
+  Video,
+  VideoDetail,
 } from "@clip-video-scene-search/shared";
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 type ApiClientRoute = {
-  method: "delete" | "get" | "post";
+  method: "delete" | "get" | "patch" | "post";
   path: string;
 };
 
@@ -28,6 +32,16 @@ export const API_CLIENT_ROUTES = {
   legacyFileMetadata: { method: "get", path: "/files/{key}" },
   legacyFileDelete: { method: "delete", path: "/files/{key}" },
   upload: { method: "post", path: "/upload" },
+  // Video scene search
+  videos: { method: "get", path: "/videos" },
+  createVideo: { method: "post", path: "/videos" },
+  video: { method: "get", path: "/videos/{video_id}" },
+  renameVideo: { method: "patch", path: "/videos/{video_id}" },
+  deleteVideo: { method: "delete", path: "/videos/{video_id}" },
+  buildIndex: { method: "post", path: "/videos/{video_id}/index" },
+  librarySummary: { method: "get", path: "/library/summary" },
+  searchText: { method: "post", path: "/search/text" },
+  searchImage: { method: "post", path: "/search/image" },
 } as const satisfies Record<string, ApiClientRoute>;
 
 /** Typed API error with HTTP status code for caller-side branching. */
@@ -267,6 +281,113 @@ export function uploadFile(
     xhr.open(
       API_CLIENT_ROUTES.upload.method.toUpperCase(),
       `${API_BASE}${API_CLIENT_ROUTES.upload.path}`
+    );
+    xhr.send(formData);
+  });
+}
+
+// --- Video scene search ---
+
+function videoPath(template: string, videoId: string): string {
+  return template.replace("{video_id}", encodeURIComponent(videoId));
+}
+
+export async function getVideos() {
+  return apiFetch<Video[]>(API_CLIENT_ROUTES.videos.path);
+}
+
+export async function getVideo(videoId: string) {
+  return apiFetch<VideoDetail>(
+    videoPath(API_CLIENT_ROUTES.video.path, videoId)
+  );
+}
+
+export async function getLibrarySummary() {
+  return apiFetch<LibrarySummary>(API_CLIENT_ROUTES.librarySummary.path);
+}
+
+export async function renameVideo(videoId: string, title: string) {
+  return apiFetch<Video>(videoPath(API_CLIENT_ROUTES.renameVideo.path, videoId), {
+    method: API_CLIENT_ROUTES.renameVideo.method.toUpperCase(),
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title }),
+  });
+}
+
+export async function deleteVideo(videoId: string) {
+  return apiFetch<{ deleted: boolean; id: string }>(
+    videoPath(API_CLIENT_ROUTES.deleteVideo.path, videoId),
+    { method: API_CLIENT_ROUTES.deleteVideo.method.toUpperCase() }
+  );
+}
+
+export async function buildSceneIndex(videoId: string) {
+  return apiFetch<Video>(videoPath(API_CLIENT_ROUTES.buildIndex.path, videoId), {
+    method: API_CLIENT_ROUTES.buildIndex.method.toUpperCase(),
+  });
+}
+
+export async function searchByText(query: string, topK?: number) {
+  return apiFetch<SearchResponse>(API_CLIENT_ROUTES.searchText.path, {
+    method: API_CLIENT_ROUTES.searchText.method.toUpperCase(),
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query, top_k: topK ?? null }),
+  });
+}
+
+export async function searchByImage(file: File, topK?: number) {
+  const formData = new FormData();
+  formData.append("file", file);
+  const suffix = topK ? `?top_k=${topK}` : "";
+  return apiFetch<SearchResponse>(
+    `${API_CLIENT_ROUTES.searchImage.path}${suffix}`,
+    {
+      method: API_CLIENT_ROUTES.searchImage.method.toUpperCase(),
+      body: formData,
+    }
+  );
+}
+
+export function createVideo(
+  file: File,
+  fields: { title: string; scene_threshold: string; clip_model: string },
+  onProgress?: (percent: number) => void
+): Promise<Video> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("title", fields.title);
+    formData.append("scene_threshold", fields.scene_threshold);
+    formData.append("clip_model", fields.clip_model);
+
+    xhr.upload.addEventListener("progress", (e) => {
+      if (e.lengthComputable && onProgress) {
+        onProgress(Math.round((e.loaded / e.total) * 100));
+      }
+    });
+
+    xhr.addEventListener("load", () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(JSON.parse(xhr.responseText));
+      } else {
+        try {
+          const body = JSON.parse(xhr.responseText);
+          reject(new ApiError(body.detail || `Ingest failed: ${xhr.status}`, xhr.status));
+        } catch {
+          reject(new ApiError(`Ingest failed: ${xhr.status}`, xhr.status));
+        }
+      }
+    });
+
+    xhr.addEventListener("error", () => reject(networkError()));
+    xhr.addEventListener("abort", () =>
+      reject(new ApiError("Ingest aborted", 0)),
+    );
+
+    xhr.open(
+      API_CLIENT_ROUTES.createVideo.method.toUpperCase(),
+      `${API_BASE}${API_CLIENT_ROUTES.createVideo.path}`
     );
     xhr.send(formData);
   });

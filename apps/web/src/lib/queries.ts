@@ -8,18 +8,26 @@ import {
 } from "@tanstack/react-query";
 import {
   ApiError,
+  buildSceneIndex,
   deleteFile,
+  deleteVideo,
   getDownloadUrl,
   getFileDetail,
   getFiles,
   getFileStats,
   getHealth,
+  getLibrarySummary,
   getPreviewUrl,
   getUploadActivity,
+  getVideo,
+  getVideos,
+  renameVideo,
 } from "@/lib/api-client";
 import type {
   FileMetadata,
   FileMetadataDetail,
+  Video,
+  VideoDetail,
 } from "@clip-video-scene-search/shared";
 
 // Single source of truth for query keys. Keep these tightly scoped so that
@@ -35,6 +43,9 @@ export const qk = {
   preview: (key: string) => [...qk.all, "preview", key] as const,
   detail: (key: string) => [...qk.all, "detail", key] as const,
   health: () => [...qk.all, "health"] as const,
+  videos: () => [...qk.all, "videos"] as const,
+  video: (id: string) => [...qk.all, "video", id] as const,
+  library: () => [...qk.all, "library"] as const,
 };
 
 export type Health = Awaited<ReturnType<typeof getHealth>>;
@@ -166,6 +177,73 @@ export function useDeleteFile() {
       // activity) against the server in the background.
       dropDeletedFileFromCache(qc, fileKey);
       qc.invalidateQueries({ queryKey: qk.all });
+    },
+  });
+}
+
+// --- Video scene search ---
+
+export function useVideos({ enabled = true }: QueryGate = {}) {
+  return useQuery<Video[], ApiError>({
+    queryKey: qk.videos(),
+    queryFn: getVideos,
+    enabled,
+  });
+}
+
+export function useLibrarySummary({ enabled = true }: QueryGate = {}) {
+  return useQuery({
+    queryKey: qk.library(),
+    queryFn: getLibrarySummary,
+    enabled,
+  });
+}
+
+/**
+ * A single video's detail. While the video is mid-index (`indexing`) the query
+ * polls so the UI advances to `indexed`/`failed` on its own — the marquee
+ * "Build scene index" action is otherwise a black box until it finishes.
+ */
+export function useVideo(id: string | undefined) {
+  return useQuery<VideoDetail, ApiError>({
+    queryKey: qk.video(id ?? ""),
+    queryFn: () => getVideo(id as string),
+    enabled: !!id,
+    refetchInterval: (query) =>
+      query.state.data?.status === "indexing" ? 1500 : false,
+  });
+}
+
+export function useRenameVideo() {
+  const qc = useQueryClient();
+  return useMutation<Video, ApiError, { id: string; title: string }>({
+    mutationFn: ({ id, title }) => renameVideo(id, title),
+    onSuccess: (_data, { id }) => {
+      qc.invalidateQueries({ queryKey: qk.video(id) });
+      qc.invalidateQueries({ queryKey: qk.videos() });
+    },
+  });
+}
+
+export function useDeleteVideo() {
+  const qc = useQueryClient();
+  return useMutation<{ deleted: boolean; id: string }, ApiError, string>({
+    mutationFn: (id) => deleteVideo(id),
+    onSuccess: () => {
+      // Video delete also rebuilds the index and changes bucket contents.
+      qc.invalidateQueries({ queryKey: qk.all });
+    },
+  });
+}
+
+export function useBuildSceneIndex() {
+  const qc = useQueryClient();
+  return useMutation<Video, ApiError, string>({
+    mutationFn: (id) => buildSceneIndex(id),
+    onSuccess: (_data, id) => {
+      // Refetch detail immediately so polling picks up `indexing`.
+      qc.invalidateQueries({ queryKey: qk.video(id) });
+      qc.invalidateQueries({ queryKey: qk.videos() });
     },
   });
 }

@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { Upload } from "lucide-react";
+import { Clapperboard, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { StatsCards } from "@/components/dashboard/stats-cards";
-import { RecentUploadsTable } from "@/components/dashboard/recent-uploads-table";
+import { SceneStatsCards } from "@/components/dashboard/scene-stats-cards";
+import { RecentVideosTable } from "@/components/dashboard/recent-videos-table";
 import { UploadChart } from "@/components/dashboard/upload-chart";
 
 export default function DashboardPage() {
@@ -13,23 +13,31 @@ export default function DashboardPage() {
         <div>
           <h1 className="page-title">Dashboard</h1>
           <p className="text-sm text-muted-foreground mt-1.5">
-            Overview of your Backblaze B2 storage activity.
+            Your scene-indexed video library on Backblaze B2 at a glance.
           </p>
         </div>
-        <Button asChild size="sm" className="h-8">
-          <Link href="/upload">
-            <Upload className="h-3.5 w-3.5" />
-            Upload files
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button asChild size="sm" variant="outline" className="h-8">
+            <Link href="/search">
+              <Search className="h-3.5 w-3.5" />
+              Scene search
+            </Link>
+          </Button>
+          <Button asChild size="sm" className="h-8">
+            <Link href="/ingest">
+              <Clapperboard className="h-3.5 w-3.5" />
+              Ingest video
+            </Link>
+          </Button>
+        </div>
       </div>
-      <StatsCards />
+      <SceneStatsCards />
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="animate-fade-in-up stagger-3">
           <UploadChart />
         </div>
         <div className="animate-fade-in-up stagger-4">
-          <RecentUploadsTable />
+          <RecentVideosTable />
         </div>
       </div>
     </div>
