@@ -398,7 +398,7 @@
   },
   "info": {
     "description": "File upload and management API backed by Backblaze B2",
-    "title": "OSS Starter Kit API",
+    "title": "CLIP Video Scene Search API",
     "version": "0.1.0"
   },
   "openapi": "3.1.0",

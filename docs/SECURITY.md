@@ -1,12 +1,12 @@
 <!-- last_verified: 2026-07-29 -->
 # Security
 
-Security principles and implementation for the vibe-coding-starter-kit.
+Security principles and implementation for the clip-video-scene-search.
 
 ## Trust Boundaries
 
-- **Frontend -> API**: CORS-restricted to configured origins, scoped to `GET/POST/DELETE/OPTIONS`. `allow_credentials` is `False` (no cookie/session auth today); enable it only alongside real auth and a tightened origin allowlist.
-- **API -> B2**: Authenticated via `B2_KEY_ID` + `B2_APPLICATION_KEY`, signature v4
+- **Frontend -> API**: CORS-restricted to configured origins, scoped to `GET/POST/PATCH/DELETE/OPTIONS`. `allow_credentials` is `False` (no cookie/session auth today); enable it only alongside real auth and a tightened origin allowlist.
+- **API -> B2**: Authenticated via `B2_APPLICATION_KEY_ID` + `B2_APPLICATION_KEY`, signature v4
 - **Client -> B2**: Presigned URLs for download (10-min expiry, `Content-Disposition: attachment`)
 
 ## Authentication & Multi-Tenancy
@@ -73,7 +73,7 @@ Security principles and implementation for the vibe-coding-starter-kit.
 
 The [Railway delivery contract](../infra/railway/README.md) is the canonical
 location for production variable classification and environment access rules.
-In particular, `B2_KEY_ID` and `B2_APPLICATION_KEY` are secrets; the web
+In particular, `B2_APPLICATION_KEY_ID` and `B2_APPLICATION_KEY` are secrets; the web
 service's `NEXT_PUBLIC_API_URL` is intentionally public build-time
 configuration and must never contain a credential. Keep production variables,
 logs, and metrics restricted to authorized operators.

@@ -2,11 +2,31 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    b2_endpoint: str = "https://s3.us-west-004.backblazeb2.com"
-    b2_key_id: str = ""
+    # Backblaze B2 — standard names (parent CLAUDE.md standard #3). The S3
+    # endpoint is DERIVED from the region (see `b2_endpoint`), so no endpoint or
+    # region string is ever hardcoded in source.
+    b2_application_key_id: str = ""
     b2_application_key: str = ""
     b2_bucket_name: str = ""
-    b2_public_url: str = ""
+    b2_region: str = ""
+    # Optional: only used to build public object URLs for a public bucket. The
+    # app runs fine without it (presigned URLs are always used for private reads).
+    b2_public_url_base: str = ""
+
+    # --- Video scene pipeline / CLIP settings ---
+    # OpenCLIP model spec "<architecture>/<pretrained>". ViT-B-32 laion2b is
+    # ungated (~600MB) and embeds a handful of keyframes on CPU in seconds.
+    clip_model: str = "ViT-B-32/laion2b_s34b_b79k"
+    # Explicit device override ("cuda" / "mps" / "cpu"). Empty = autodetect
+    # (CUDA -> Apple MPS -> CPU). Never hard-requires a GPU.
+    clip_device: str = ""
+    # PySceneDetect ContentDetector threshold — higher = fewer, coarser scenes.
+    scene_threshold: float = 27.0
+    # Discard scenes shorter than this (seconds) so micro-cuts don't flood the
+    # index with near-duplicate keyframes.
+    min_scene_len_seconds: float = 0.6
+    # Default number of scene hits a search returns.
+    search_top_k: int = 12
 
     api_port: int = 8000
     # Interactive API docs (/docs, /redoc, /openapi.json). On by default for
@@ -66,6 +86,16 @@ class Settings(BaseSettings):
     download_count_file: str = ".data/download_count.json"
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
+
+    @property
+    def b2_endpoint(self) -> str:
+        """S3-compatible endpoint derived from the region.
+
+        Kept as a derived property so no region/endpoint string is hardcoded in
+        source (parent CLAUDE.md standard #4). B2's S3 endpoints follow
+        `https://s3.<region>.backblazeb2.com`.
+        """
+        return f"https://s3.{self.b2_region}.backblazeb2.com"
 
     @property
     def cors_origins(self) -> list[str]:

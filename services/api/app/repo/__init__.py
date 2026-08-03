@@ -1,3 +1,14 @@
+import os
+
+# torch and faiss each bundle their own OpenMP runtime; on macOS arm64 loading
+# both aborts with "OMP: Error #15 ... multiple copies of the OpenMP runtime".
+# Setting this BEFORE either native library loads is the documented workaround.
+# The repo/ package is imported early (it owns the B2 client), so this runs
+# before any lazy torch/faiss import in repo/clip.py / repo/faiss_index.py.
+# faiss is additionally capped to one OpenMP thread there — the env var alone is
+# not enough.
+os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
+
 from app.repo.b2_client import (
     check_connectivity,
     delete_file,

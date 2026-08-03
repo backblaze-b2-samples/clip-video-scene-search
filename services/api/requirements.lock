@@ -9,6 +9,14 @@
 # Keep requirements.txt as the human-edited input. Refresh this file only from
 # a clean Python 3.11 virtual environment as documented in
 # docs/dev-workflows.md, then review the lock and OpenAPI contract together.
+#
+# NOTE on the video-scene ML stack (torch/torchvision/open_clip_torch/faiss-cpu/
+# scenedetect/imageio-ffmpeg/numpy): these are pinned exactly here, but their
+# large transitive trees (CUDA/BLAS libs, huggingface-hub, opencv, etc.) are
+# resolved by pip at install time rather than frozen line-by-line — the wheels
+# are platform-specific and the sample lazy-imports them, so a full freeze would
+# be brittle across CPU/GPU hosts. Re-freeze from a clean env if you need a
+# fully hermetic ML lock.
 annotated-doc==0.0.5
 annotated-types==0.8.0
 anyio==4.14.2
@@ -49,3 +57,11 @@ uvicorn==0.51.0
 uvloop==0.22.1
 watchfiles==1.2.0
 websockets==16.1.1
+# --- Video scene pipeline (exact pins; transitive ML deps resolved at install) ---
+numpy==1.26.4
+scenedetect==0.6.5
+imageio-ffmpeg==0.5.1
+faiss-cpu==1.9.0
+torch==2.8.0
+torchvision==0.23.0
+open_clip_torch==2.26.1
