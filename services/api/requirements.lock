@@ -12,11 +12,17 @@
 #
 # NOTE on the video-scene ML stack (torch/torchvision/open_clip_torch/faiss-cpu/
 # scenedetect/imageio-ffmpeg/numpy): these are pinned exactly here, but their
-# large transitive trees (CUDA/BLAS libs, huggingface-hub, opencv, etc.) are
+# large transitive trees (CUDA/BLAS libs, huggingface-hub, etc.) are
 # resolved by pip at install time rather than frozen line-by-line — the wheels
 # are platform-specific and the sample lazy-imports them, so a full freeze would
 # be brittle across CPU/GPU hosts. Re-freeze from a clean env if you need a
 # fully hermetic ML lock.
+#
+# opencv-python-headless is an EXCEPTION: scenedetect ships OpenCV only as an
+# optional [opencv-headless] extra, NOT a hard transitive dep, so a bare
+# `scenedetect==` install resolves green but has no cv2 and 500s at ingest.
+# It is therefore pinned explicitly below (matching the requirements.txt extra)
+# and held to a 4.x build compatible with numpy<2.0.
 annotated-doc==0.0.5
 annotated-types==0.8.0
 anyio==4.14.2
@@ -60,6 +66,7 @@ websockets==16.1.1
 # --- Video scene pipeline (exact pins; transitive ML deps resolved at install) ---
 numpy==1.26.4
 scenedetect==0.6.5
+opencv-python-headless==4.11.0.86
 imageio-ffmpeg==0.5.1
 faiss-cpu==1.9.0
 torch==2.8.0

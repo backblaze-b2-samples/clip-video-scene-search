@@ -28,9 +28,9 @@ import { APP_NAME } from "@/lib/app-config";
 
 const navItems = [
   { title: "Dashboard", href: "/", icon: LayoutDashboard },
-  { title: "Scene Search", href: "/search", icon: Search },
   { title: "Ingest", href: "/ingest", icon: Clapperboard },
   { title: "Library", href: "/library", icon: Library },
+  { title: "Scene Search", href: "/search", icon: Search },
   { title: "Files", href: "/files", icon: FolderOpen },
   { title: "Upload", href: "/upload", icon: Upload },
   { title: "Settings", href: "/settings", icon: Settings },

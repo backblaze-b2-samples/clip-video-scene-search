@@ -2,7 +2,14 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
-import { ImageIcon, Loader2, Play, Search } from "lucide-react";
+import {
+  Clapperboard,
+  ImageIcon,
+  Library,
+  Loader2,
+  Play,
+  Search,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -22,6 +29,22 @@ function SearchResults({ result }: { result: SearchResponse }) {
         icon={Search}
         title="No matching scenes"
         description="Nothing matched this query. Build the scene index for your videos, or try a different description."
+        action={
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <Button asChild size="sm">
+              <Link href="/ingest">
+                <Clapperboard className="h-3.5 w-3.5" />
+                Ingest video
+              </Link>
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <Link href="/library">
+                <Library className="h-3.5 w-3.5" />
+                Go to Library
+              </Link>
+            </Button>
+          </div>
+        }
       />
     );
   }

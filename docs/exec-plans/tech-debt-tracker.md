@@ -60,3 +60,13 @@ Known tech debt items. Agents update this when they discover or create tech debt
 | Custom `FileNotFoundError` shadowed the built-in | Renamed to `FileNotFoundServiceError` |
 | Dropzone accepted any file type client-side | `accept` allow-list mirroring backend `ALLOWED_TYPES` (tested for drift) |
 | No test harness for feature specs | pytest suite across upload, files, activity, errors, validation, rate limit, pagination |
+
+## 2026-08-03 — verify
+
+Nitpicks surfaced by the sample-3-verify UX funnel (blockers + frictions were fixed in-loop; these are backlog-only, not shipped defects):
+
+- Global nav / Upload — the sidebar carries both **Ingest** and the generic starter-kit **Upload**; Upload doesn't segment/index and doesn't redirect to Ingest, so a goal-driven first-time user could pick the wrong "add a file" door → produces a non-searchable B2 object. Mitigated because every signposted CTA points to Ingest, never Upload. (`.local/verify/A/A-06-upload-empty.png`)
+- Dashboard — the "Upload Activity (Last 7 days)" chart counts raw B2 bucket objects (showed TOTAL 17699 / a large bar) while Videos/Scenes/Indexed read 0, contradicting the "No videos yet" empty state → the starter-kit dashboard isn't fully re-aggregated to domain (video/scene) metrics. (`.local/verify/A/A-01-home.png`)
+- Scene Search (cold start) — the first text search after a cold server pays CLIP model-load latency (tens of seconds) showing only a button spinner + the standing empty-state copy, with no explicit "loading model…" label like the build card has → can read as "no results yet." (no shot; observed by Lens C)
+- Video detail (build, warm cache) — the first instant of a warm rebuild briefly flashes the "Downloading CLIP model weights (first run only, ~600 MB)…" indeterminate label during in-process model load (the `embedded_count === 0` gate is also true while a cached model loads) even though nothing downloads; self-corrects to the determinate bar the moment embedding starts. (`.local/verify/D/D-02a-warm-download-flash.png`)
+- Video detail (build progress) — the determinate Radix `Progress` reports `aria-valuenow="0"` throughout the build even though the visual fill and the "X/N scenes embedded" text advance correctly (an `aria-label` carries the count); a screen reader reading the progressbar's numeric value would hear 0. Minor a11y, likely pre-existing Radix behavior. (`.local/verify/D/D-10-determinate-partway.png`)

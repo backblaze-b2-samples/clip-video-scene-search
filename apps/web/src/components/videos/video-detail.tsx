@@ -9,6 +9,7 @@ import {
   Layers,
   Loader2,
   Pencil,
+  Search,
   Sparkles,
   Trash2,
 } from "lucide-react";
@@ -18,6 +19,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ui/error-state";
@@ -91,6 +93,15 @@ export function VideoDetail({ id }: { id: string }) {
     video.scene_count > 0
       ? `${video.embedded_count}/${video.scene_count} scenes embedded`
       : "No scenes to index";
+  // The first-ever build downloads the ~600 MB OpenCLIP weights before any
+  // scene can be embedded, so embedded_count stays at 0 for that whole window.
+  // Treat it as an indeterminate sub-phase (duration genuinely unknown), then
+  // switch to a determinate bar the moment embedding actually starts.
+  const isDownloadingWeights = isIndexing && video.embedded_count === 0;
+  const embedPercent =
+    video.scene_count > 0
+      ? Math.round((video.embedded_count / video.scene_count) * 100)
+      : 0;
 
   const openRename = () => {
     setRenameValue(video.title);
@@ -175,7 +186,12 @@ export function VideoDetail({ id }: { id: string }) {
             <Trash2 className="h-3.5 w-3.5" />
             Delete
           </Button>
-          <Button size="sm" onClick={buildIndex} disabled={isIndexing || indexMutation.isPending}>
+          <Button
+            variant={isIndexed ? "outline" : "default"}
+            size="sm"
+            onClick={buildIndex}
+            disabled={isIndexing || indexMutation.isPending}
+          >
             {isIndexing || indexMutation.isPending ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
             ) : (
@@ -183,17 +199,47 @@ export function VideoDetail({ id }: { id: string }) {
             )}
             {isIndexed ? "Rebuild scene index" : "Build scene index"}
           </Button>
+          {isIndexed && (
+            <Button asChild size="sm">
+              <Link href="/search">
+                <Search className="h-3.5 w-3.5" />
+                Search scenes
+              </Link>
+            </Button>
+          )}
         </div>
       </div>
 
       {isIndexing && (
         <Card>
-          <CardContent className="flex items-center gap-3 p-4 text-sm text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-            <span aria-live="polite">
-              Embedding keyframes with CLIP — {progressLabel}. Weights download on
-              first run; this can take a little longer the first time.
-            </span>
+          <CardContent className="space-y-3 p-4 text-sm text-muted-foreground">
+            <div className="flex items-center gap-3">
+              <Loader2
+                className="h-4 w-4 shrink-0 animate-spin"
+                aria-hidden="true"
+              />
+              <span aria-live="polite">
+                {isDownloadingWeights
+                  ? "Downloading CLIP model weights (first run only, ~600 MB)… scene embedding starts once the model is ready."
+                  : `Embedding keyframes with CLIP — ${progressLabel}.`}
+              </span>
+            </div>
+            {isDownloadingWeights ? (
+              // Duration genuinely unknown while the weights download, so a
+              // sweeping indeterminate track is honest where a bar pinned at 0%
+              // would read as frozen.
+              <div
+                role="progressbar"
+                aria-label="Downloading CLIP model weights"
+                className="progress-indeterminate h-2 w-full rounded-full"
+              />
+            ) : (
+              <Progress
+                aria-label={`Embedding progress — ${progressLabel}`}
+                value={embedPercent}
+                className="h-2"
+              />
+            )}
           </CardContent>
         </Card>
       )}
